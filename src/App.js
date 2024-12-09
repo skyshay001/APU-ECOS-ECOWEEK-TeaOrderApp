@@ -15,8 +15,18 @@ function App() {
     const [teaType, setTeaType] = useState("");
     const [addOns, setAddOns] = useState([]);
     const [orders, setOrders] = useState([]);
+    const [journal, setJournal] = useState([]);
 
-    // Fetch orders from Firebase
+    // Log changes to the journal
+    const logChange = (action, order) => {
+        const journalEntry = {
+            action,
+            order,
+            timestamp: new Date().toISOString(),
+        };
+        setJournal((prevJournal) => [...prevJournal, journalEntry]);
+    };
+
     useEffect(() => {
         const ordersRef = ref(db, "orders/");
         const unsubscribe = onValue(ordersRef, (snapshot) => {
@@ -35,7 +45,6 @@ function App() {
         return () => unsubscribe();
     }, [db]);
 
-    // Submit a new order to Firebase
     const submitOrder = () => {
         if (!teaType) {
             alert("Please select a tea type.");
@@ -56,22 +65,31 @@ function App() {
             });
     };
 
-    // Mark an order as served
     const markAsServed = (id) => {
         const order = orders.find((order) => order.id === id);
         if (order && order.status !== "Served") {
             const updatedOrder = { ...order, status: "Served" };
-            set(ref(db, `orders/${id}`), updatedOrder).catch((error) => {
-                console.error("Error marking order as served:", error);
-            });
+            set(ref(db, `orders/${id}`), updatedOrder)
+                .then(() => {
+                    logChange("Marked as Served", updatedOrder);
+                })
+                .catch((error) => {
+                    console.error("Error marking order as served:", error);
+                });
         }
     };
 
-    // Delete an order
     const deleteOrder = (id) => {
-        remove(ref(db, `orders/${id}`)).catch((error) => {
-            console.error("Error deleting order:", error);
-        });
+        const order = orders.find((order) => order.id === id);
+        if (order) {
+            remove(ref(db, `orders/${id}`))
+                .then(() => {
+                    logChange("Deleted", order);
+                })
+                .catch((error) => {
+                    console.error("Error deleting order:", error);
+                });
+        }
     };
 
     return (
@@ -85,6 +103,21 @@ function App() {
                 markAsServed={markAsServed}
                 deleteOrder={deleteOrder}
             />
+            <div>
+                <h2>Journal</h2>
+                {journal.length === 0 ? (
+                    <p>No actions logged yet.</p>
+                ) : (
+                    <ul>
+                        {journal.map((entry, index) => (
+                            <li key={index}>
+                                {entry.action} - {entry.order.teaType} at{" "}
+                                {new Date(entry.timestamp).toLocaleString()}
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </div>
     );
 }
