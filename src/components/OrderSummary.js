@@ -1,12 +1,22 @@
 import React from "react";
 
-const OrderSummary = ({ teaType, addOns, saveOrderToDatabase }) => {
+const OrderSummary = ({ orders, saveOrdersToDatabase }) => {
     return (
         <div>
             <h2>Order Summary</h2>
-            <p>Tea: {teaType || "None selected"}</p>
-            <p>Add-Ons: {addOns.length > 0 ? addOns.join(", ") : "None"}</p>
-            <button onClick={saveOrderToDatabase}>Submit Order</button>
+            {orders.length === 0 ? (
+                <p>No orders added yet.</p>
+            ) : (
+                <ul>
+                    {orders.map((order) => (
+                        <li key={order.id}>
+                            Tea: {order.teaType}, Add-Ons:{" "}
+                            {order.addOns.length > 0 ? order.addOns.join(", ") : "None"}
+                        </li>
+                    ))}
+                </ul>
+            )}
+            <button onClick={saveOrdersToDatabase}>Submit All Orders</button>
         </div>
     );
 };

@@ -14,9 +14,15 @@ const OrderDashboard = ({ orders, markAsServed, deleteOrder }) => {
                             {order.addOns && order.addOns.length > 0
                                 ? order.addOns.join(", ")
                                 : "None"}{" "}
-                            - {order.status || "Pending"}
-                            <button onClick={() => markAsServed(order.id)}>Mark as Served</button>
-                            <button onClick={() => deleteOrder(order.id)}>Delete</button>
+                            - {order.status}
+                            {order.status !== "Served" && (
+                                <button onClick={() => markAsServed(order.id)}>
+                                    Mark as Served
+                                </button>
+                            )}
+                            <button onClick={() => deleteOrder(order.id)}>
+                                Delete
+                            </button>
                         </li>
                     ))}
                 </ul>

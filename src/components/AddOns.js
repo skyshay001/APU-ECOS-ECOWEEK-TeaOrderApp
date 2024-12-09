@@ -1,8 +1,8 @@
 import React from "react";
 
 const AddOns = ({ addOns, setAddOns, menu }) => {
-    const handleAddOnChange = (event) => {
-        const { value, checked } = event.target;
+    const handleAddOnChange = (e) => {
+        const { value, checked } = e.target;
         if (checked) {
             setAddOns([...addOns, value]);
         } else {
@@ -12,16 +12,18 @@ const AddOns = ({ addOns, setAddOns, menu }) => {
 
     return (
         <div>
-            <h2>Add-Ons</h2>
+            <h2>Select Add-Ons</h2>
             {menu.addOns.map((addOn, index) => (
-                <label key={index}>
+                <div key={index}>
                     <input
                         type="checkbox"
+                        id={`addon-${index}`}
                         value={addOn}
+                        checked={addOns.includes(addOn)}
                         onChange={handleAddOnChange}
                     />
-                    {addOn}
-                </label>
+                    <label htmlFor={`addon-${index}`}>{addOn}</label>
+                </div>
             ))}
         </div>
     );
