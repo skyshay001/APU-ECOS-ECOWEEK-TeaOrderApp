@@ -1,7 +1,7 @@
 // Import the functions you need from the SDK
 import { initializeApp } from "firebase/app";
 
-// Use environment variables to store Firebase config securely
+// Firebase project configuration using environment variables
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_API_KEY,
   authDomain: process.env.REACT_APP_AUTH_DOMAIN,
@@ -12,6 +12,7 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_APP_ID,
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
 export default app; // Export the Firebase app instance
