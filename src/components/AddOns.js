@@ -1,6 +1,6 @@
 import React from "react";
 
-const AddOns = ({ addOns, setAddOns }) => {
+const AddOns = ({ addOns, setAddOns, menu }) => {
     const handleAddOnChange = (event) => {
         const { value, checked } = event.target;
         if (checked) {
@@ -13,24 +13,18 @@ const AddOns = ({ addOns, setAddOns }) => {
     return (
         <div>
             <h2>Add-Ons</h2>
-            <label>
-                <input
-                    type="checkbox"
-                    value="More Boba"
-                    onChange={handleAddOnChange}
-                />
-                More Boba
-            </label>
-            <label>
-                <input
-                    type="checkbox"
-                    value="Matcha Topping"
-                    onChange={handleAddOnChange}
-                />
-                Matcha Topping
-            </label>
+            {menu.addOns.map((addOn, index) => (
+                <label key={index}>
+                    <input
+                        type="checkbox"
+                        value={addOn}
+                        onChange={handleAddOnChange}
+                    />
+                    {addOn}
+                </label>
+            ))}
         </div>
     );
 };
 
-export default AddOns;	
+export default AddOns;

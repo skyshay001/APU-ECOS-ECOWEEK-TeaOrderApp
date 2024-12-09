@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, push, onValue } from "firebase/database";
+import { getDatabase, ref, push, onValue, set, remove } from "firebase/database";
 import app from "./firebaseConfig";
 import OrderForm from "./components/OrderForm";
 import AddOns from "./components/AddOns";
@@ -7,86 +7,108 @@ import OrderSummary from "./components/OrderSummary";
 import OrderDashboard from "./components/OrderDashboard";
 
 function App() {
+    const [menu, setMenu] = useState({
+        teaTypes: ["Black Tea", "Green Tea", "Houjicha"],
+        addOns: ["More Boba", "Matcha Topping"],
+    });
     const [teaType, setTeaType] = useState("");
     const [addOns, setAddOns] = useState([]);
-    const [orders, setOrders] = useState([]); // State to store fetched orders
+    const [orders, setOrders] = useState([]);
+    const [journal, setJournal] = useState([]); // Logs order changes
 
-    // Function to save order to Firebase
+    const db = getDatabase(app);
+
+    // Save order to Firebase
     const saveOrderToDatabase = () => {
-        const db = getDatabase(app);
         const orderData = {
             teaType,
             addOns,
             timestamp: Date.now(),
         };
-
         push(ref(db, "orders/"), orderData)
             .then(() => {
-                console.log("Order saved:", orderData);
                 alert("Order submitted successfully!");
             })
             .catch((error) => {
-                console.error("Error saving order:", error);
                 alert("Failed to submit order.");
+                console.error("Error saving order:", error);
             });
     };
 
-    // Function to fetch orders from Firebase
+    // Fetch orders from Firebase
     const fetchOrders = () => {
-        const db = getDatabase(app);
         const ordersRef = ref(db, "orders/");
-    
         onValue(ordersRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const ordersArray = Object.values(data).map((order) => ({
-                    ...order,
-                    addOns: order.addOns || [], // Ensure addOns is always an array
+                const ordersArray = Object.keys(data).map((key) => ({
+                    id: key,
+                    ...data[key],
                 }));
-                setOrders(ordersArray); // Update state with sanitized data
+                setOrders(ordersArray);
             } else {
-                setOrders([]); // If no data, clear the orders array
+                setOrders([]);
             }
         });
-    };    
+    };
 
-    // Use useEffect to fetch orders when the app loads
+    // Add order to the journal
+    const logChange = (changeType, order) => {
+        setJournal((prevJournal) => [
+            ...prevJournal,
+            { changeType, order, timestamp: Date.now() },
+        ]);
+    };
+
+    // Mark an order as served
+    const markAsServed = (id) => {
+        const orderToUpdate = orders.find((order) => order.id === id);
+        if (orderToUpdate) {
+            const updatedOrder = { ...orderToUpdate, status: "Served" };
+            set(ref(db, `orders/${id}`), updatedOrder);
+            logChange("Marked as Served", updatedOrder);
+        }
+    };
+
+    // Delete an order
+    const deleteOrder = (id) => {
+        const orderToDelete = orders.find((order) => order.id === id);
+        if (orderToDelete) {
+            remove(ref(db, `orders/${id}`));
+            logChange("Deleted", orderToDelete);
+        }
+    };
+
     useEffect(() => {
         fetchOrders();
     }, []);
 
-    // Function to test Firebase connection
-    const testFirebaseConnection = () => {
-        const db = getDatabase(app);
-        push(ref(db, "orders/"), {
-            teaType: "Test Tea",
-            addOns: ["Test Add-On"],
-            timestamp: Date.now(),
-        })
-            .then(() => {
-                console.log("Test data pushed successfully!");
-                alert("Test data pushed successfully!");
-            })
-            .catch((error) => {
-                console.error("Error pushing test data:", error);
-                alert("Failed to push test data.");
-            });
-    };
-
     return (
         <div>
             <h1>Tea Order App</h1>
-            <OrderForm setTeaType={setTeaType} />
-            <AddOns addOns={addOns} setAddOns={setAddOns} />
+            <OrderForm setTeaType={setTeaType} menu={menu} />
+            <AddOns addOns={addOns} setAddOns={setAddOns} menu={menu} />
             <OrderSummary
                 teaType={teaType}
                 addOns={addOns}
                 saveOrderToDatabase={saveOrderToDatabase}
             />
-            <OrderDashboard orders={orders} /> {/* Add the dashboard to display orders */}
-            <button onClick={testFirebaseConnection}>
-                Test Firebase Connection
-            </button>
+            <OrderDashboard
+                orders={orders}
+                markAsServed={markAsServed}
+                deleteOrder={deleteOrder}
+            />
+            <div>
+                <h2>Journal</h2>
+                <ul>
+                    {journal.map((entry, index) => (
+                        <li key={index}>
+                            {entry.changeType} - {entry.order.teaType} at{" "}
+                            {new Date(entry.timestamp).toLocaleString()}
+                        </li>
+                    ))}
+                </ul>
+            </div>
         </div>
     );
 }

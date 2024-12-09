@@ -1,6 +1,6 @@
 import React from "react";
 
-const OrderForm = ({ setTeaType }) => {
+const OrderForm = ({ setTeaType, menu }) => {
     const handleTeaSelection = (event) => {
         setTeaType(event.target.value);
     };
@@ -9,33 +9,17 @@ const OrderForm = ({ setTeaType }) => {
         <div>
             <h2>Select Your Tea</h2>
             <form>
-                <label>
-                    <input
-                        type="radio"
-                        name="tea"
-                        value="Black Tea"
-                        onChange={handleTeaSelection}
-                    />
-                    Black Tea
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        name="tea"
-                        value="Green Tea"
-                        onChange={handleTeaSelection}
-                    />
-                    Green Tea
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        name="tea"
-                        value="Houjicha"
-                        onChange={handleTeaSelection}
-                    />
-                    Houjicha
-                </label>
+                {menu.teaTypes.map((tea, index) => (
+                    <label key={index}>
+                        <input
+                            type="radio"
+                            name="tea"
+                            value={tea}
+                            onChange={handleTeaSelection}
+                        />
+                        {tea}
+                    </label>
+                ))}
             </form>
         </div>
     );
